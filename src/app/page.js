@@ -1,4 +1,4 @@
-import Home from './modules/home/Home'
+import Home from './home/Home'
 
 export default function Page() {
   return <Home />

@@ -1,31 +1,39 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+"use client";
+import { Inter } from 'next/font/google';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { usePathname } from 'next/navigation';
+import './globals.css';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-inter' 
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata = {
-  title: "Gametix",
-  description: "Juegos y emuladores para todas las plataformas",
-};
 
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+  // Asegúrate de que detecte correctamente las rutas de dashboard
+  const isDashboardRoute = pathname?.startsWith('/dashboard');
+
   return (
-    <html lang="es" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+    <html lang="es" className={inter.variable}>
+      <body className="font-sans antialiased">
+        {!isDashboardRoute && <Header />}
+        
+        <main>{children}</main>
+        
+        {!isDashboardRoute && <Footer />}
+        
+        <ToastContainer 
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnHover
+          theme="light"
+        />
       </body>
     </html>
   );
