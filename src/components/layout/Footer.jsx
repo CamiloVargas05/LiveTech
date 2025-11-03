@@ -7,7 +7,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-gray-300 dark:text-gray-400 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
@@ -26,16 +26,16 @@ const Footer = () => {
             </p>
             {/* Redes Sociales */}
             <div className="flex space-x-4 pt-2">
-              <a href="#" className="hover:text-green-400 transition-colors">
+              <a href="#" className="hover:text-green-400 dark:hover:text-green-300 transition-colors" aria-label="Facebook">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="hover:text-green-400 transition-colors">
+              <a href="#" className="hover:text-green-400 dark:hover:text-green-300 transition-colors" aria-label="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="hover:text-green-400 transition-colors">
+              <a href="#" className="hover:text-green-400 dark:hover:text-green-300 transition-colors" aria-label="Instagram">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="hover:text-green-400 transition-colors">
+              <a href="#" className="hover:text-green-400 dark:hover:text-green-300 transition-colors" aria-label="LinkedIn">
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
@@ -46,27 +46,27 @@ const Footer = () => {
             <h3 className="text-white font-semibold text-lg mb-4">Enlaces Rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#inicio" className="hover:text-green-400 transition-colors text-sm">
+                <a href="#inicio" className="hover:text-green-400 dark:hover:text-green-300 transition-colors text-sm">
                   Inicio
                 </a>
               </li>
               <li>
-                <a href="#quienes-somos" className="hover:text-green-400 transition-colors text-sm">
+                <a href="#quienes-somos" className="hover:text-green-400 dark:hover:text-green-300 transition-colors text-sm">
                   Quiénes Somos
                 </a>
               </li>
               <li>
-                <a href="#servicios" className="hover:text-green-400 transition-colors text-sm">
+                <a href="#servicios" className="hover:text-green-400 dark:hover:text-green-300 transition-colors text-sm">
                   Servicios
                 </a>
               </li>
               <li>
-                <a href="#como-funciona" className="hover:text-green-400 transition-colors text-sm">
+                <a href="#como-funciona" className="hover:text-green-400 dark:hover:text-green-300 transition-colors text-sm">
                   Cómo Funciona
                 </a>
               </li>
               <li>
-                <a href="/login" className="hover:text-green-400 transition-colors text-sm">
+                <a href="/pages/login" className="hover:text-green-400 dark:hover:text-green-300 transition-colors text-sm">
                   Iniciar Sesión
                 </a>
               </li>
@@ -91,18 +91,18 @@ const Footer = () => {
             <h3 className="text-white font-semibold text-lg mb-4">Contacto</h3>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 text-green-400 dark:text-green-300 flex-shrink-0 mt-0.5" />
                 <span className="text-sm">
                   Calle Principal #123<br />
                   Neiva, Huila, Colombia
                 </span>
               </li>
               <li className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-green-400 flex-shrink-0" />
+                <Phone className="w-5 h-5 text-green-400 dark:text-green-300 flex-shrink-0" />
                 <span className="text-sm">+57 (300) 123-4567</span>
               </li>
               <li className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-green-400 flex-shrink-0" />
+                <Mail className="w-5 h-5 text-green-400 dark:text-green-300 flex-shrink-0" />
                 <span className="text-sm">contacto@livetech.com</span>
               </li>
             </ul>
@@ -110,16 +110,16 @@ const Footer = () => {
         </div>
 
         {/* Línea divisoria */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
+        <div className="border-t border-gray-800 dark:border-gray-700 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-center md:text-left">
               © {currentYear} LiveTech. Todos los derechos reservados.
             </p>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="hover:text-green-400 transition-colors">
+              <a href="#" className="hover:text-green-400 dark:hover:text-green-300 transition-colors">
                 Política de Privacidad
               </a>
-              <a href="#" className="hover:text-green-400 transition-colors">
+              <a href="#" className="hover:text-green-400 dark:hover:text-green-300 transition-colors">
                 Términos de Servicio
               </a>
             </div>

@@ -65,7 +65,7 @@ export const useLogin = () => {
       }
 
       // Redirigir al dashboard
-      router.push('/dashboard');
+      router.push('/pages/dashboard');
 
       return respuesta.data;
     } catch (error) {

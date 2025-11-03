@@ -24,7 +24,6 @@ const Home = () => {
   useEffect(() => {
     setIsVisible(true);
     
-    // Animación automática de los pasos
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 4);
     }, 3000);
@@ -90,18 +89,17 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       
-      {/* Hero Section con animaciones */}
+      {/* Hero Section */}
       <section 
         id="inicio" 
         className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
       >
-        {/* Elementos decorativos animados de fondo */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-          <div className="absolute top-40 right-10 w-72 h-72 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-green-200 dark:bg-green-900 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
+          <div className="absolute top-40 right-10 w-72 h-72 bg-green-300 dark:bg-green-800 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-green-100 dark:bg-green-950 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
         </div>
 
         <div className="max-w-7xl mx-auto relative">
@@ -112,20 +110,20 @@ const Home = () => {
               </span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
               Soporte Técnico
               <span className="block bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
                 en Tiempo Real
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto">
               Revolucionamos la gestión de tickets con transmisión en vivo, chat interactivo y transparencia total en cada paso del proceso.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button 
-                onClick={() => router.push('/login')}
+                onClick={() => router.push('/pages/login')}
                 className="group bg-gradient-to-r from-green-400 to-green-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
               >
                 Comenzar Ahora
@@ -134,7 +132,7 @@ const Home = () => {
               
               <button 
                 onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
-                className="group bg-white text-gray-800 px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border-2 border-gray-200"
+                className="group bg-white dark:bg-gray-800 text-gray-800 dark:text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border-2 border-gray-200 dark:border-gray-700"
               >
                 <PlayCircle className="w-5 h-5" />
                 Ver Demo
@@ -142,19 +140,17 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Stats Cards con animación */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20">
             {stats.map((stat, index) => (
               <div 
                 key={index}
-                className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-gray-100"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-gray-100 dark:border-gray-700"
               >
-                <div className="text-green-500 mb-2 flex justify-center">
+                <div className="text-green-500 dark:text-green-400 mb-2 flex justify-center">
                   {stat.icon}
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">{stat.number}</div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stat.number}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -162,49 +158,49 @@ const Home = () => {
       </section>
 
       {/* Quiénes Somos Section */}
-      <section id="quienes-somos" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="quienes-somos" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
                 Transformamos el
-                <span className="block text-green-500">Soporte Técnico</span>
+                <span className="block text-green-500 dark:text-green-400">Soporte Técnico</span>
               </h2>
-              <p className="text-lg text-gray-600 leading-relaxed">
+              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
                 LiveTech nace de la necesidad de modernizar la gestión de tickets de soporte técnico. Somos un equipo de profesionales comprometidos con la transparencia, eficiencia y la mejor experiencia del usuario.
               </p>
-              <p className="text-lg text-gray-600 leading-relaxed">
+              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
                 Nuestra plataforma combina tecnología de vanguardia con herramientas de comunicación en tiempo real, permitiendo que usuarios, administradores y técnicos trabajen en perfecta sincronía.
               </p>
               <div className="flex gap-4 pt-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <span className="text-gray-700 font-medium">Innovación Constante</span>
+                  <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400" />
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">Innovación Constante</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <span className="text-gray-700 font-medium">Soporte 24/7</span>
+                  <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400" />
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">Soporte 24/7</span>
                 </div>
               </div>
             </div>
             
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-green-400 to-green-600 rounded-3xl shadow-2xl transform hover:rotate-2 transition-transform duration-500"></div>
-              <div className="absolute inset-0 bg-gradient-to-br from-green-300 to-green-500 rounded-3xl shadow-2xl transform -rotate-6 -z-10"></div>
+              <div className="aspect-square bg-gradient-to-br from-green-400 to-green-600 dark:from-green-600 dark:to-green-800 rounded-3xl shadow-2xl transform hover:rotate-2 transition-transform duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-300 to-green-500 dark:from-green-500 dark:to-green-700 rounded-3xl shadow-2xl transform -rotate-6 -z-10"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Servicios Section con cards animadas */}
-      <section id="servicios" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50">
+      {/* Servicios Section */}
+      <section id="servicios" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Servicios que
-              <span className="text-green-500"> Marcan la Diferencia</span>
+              <span className="text-green-500 dark:text-green-400"> Marcan la Diferencia</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Herramientas innovadoras diseñadas para optimizar cada etapa del proceso de soporte técnico
             </p>
           </div>
@@ -213,15 +209,15 @@ const Home = () => {
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 border border-gray-100 cursor-pointer"
+                className="group bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 border border-gray-100 dark:border-gray-700 cursor-pointer"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 dark:from-green-500 dark:to-green-700 rounded-xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-500 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-green-500 dark:group-hover:text-green-400 transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -230,12 +226,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Cómo Funciona Section con pasos interactivos */}
-      <section id="como-funciona" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900 text-white relative overflow-hidden">
-        {/* Fondo animado */}
+      {/* Cómo Funciona Section */}
+      <section id="como-funciona" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900 dark:bg-gray-950 text-white relative overflow-hidden transition-colors duration-300">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-green-500 rounded-full filter blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-400 rounded-full filter blur-3xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-green-500 dark:bg-green-600 rounded-full filter blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-400 dark:bg-green-500 rounded-full filter blur-3xl animate-pulse animation-delay-2000"></div>
         </div>
 
         <div className="max-w-7xl mx-auto relative">
@@ -262,7 +257,7 @@ const Home = () => {
                 <div className={`bg-gradient-to-br ${
                   activeStep === index 
                     ? 'from-green-400 to-green-600' 
-                    : 'from-gray-800 to-gray-700'
+                    : 'from-gray-800 to-gray-700 dark:from-gray-900 dark:to-gray-800'
                 } p-8 rounded-2xl shadow-2xl h-full transition-all duration-500`}>
                   <div className="text-6xl font-bold text-white/20 mb-4">
                     {step.number}
@@ -285,7 +280,6 @@ const Home = () => {
             ))}
           </div>
 
-          {/* Indicadores de paso */}
           <div className="flex justify-center gap-3 mt-12">
             {steps.map((_, index) => (
               <button
@@ -303,7 +297,7 @@ const Home = () => {
       </section>
 
       {/* CTA Final */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-400 to-green-600 relative overflow-hidden">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-400 to-green-600 dark:from-green-600 dark:to-green-800 relative overflow-hidden transition-colors duration-300">
         <div className="absolute inset-0 bg-grid-white/10"></div>
         <div className="max-w-4xl mx-auto text-center relative">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -313,8 +307,8 @@ const Home = () => {
             Únete a cientos de usuarios que ya confían en LiveTech para la gestión de sus equipos
           </p>
           <button 
-            onClick={() => router.push('/login')}
-            className="bg-white text-green-600 px-10 py-4 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 inline-flex items-center gap-2"
+            onClick={() => router.push('/pages/login')}
+            className="bg-white text-green-600 dark:text-green-700 px-10 py-4 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 inline-flex items-center gap-2"
           >
             Iniciar Sesión Ahora
             <ArrowRight className="w-5 h-5" />
@@ -322,7 +316,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CSS personalizado para animaciones */}
       <style jsx>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }

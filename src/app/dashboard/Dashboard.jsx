@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Users
 } from 'lucide-react';
+import ThemeToggle from '@/components/Toggle/ThemeToggle';
 
 // Importaciones dinámicas para usuario
 const UserInicio = dynamic(() => import('./modules/user/Inicio'));
@@ -38,7 +39,7 @@ export default function Dashboard() {
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (!userData) {
-      router.push('/login');
+      router.push('/pages/login');
       return;
     }
     const parsedUser = JSON.parse(userData);
@@ -48,7 +49,7 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    router.push('/login');
+    router.push('/pages/login');
   };
 
   const NavigationMenu = () => {
@@ -78,7 +79,7 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex space-x-2 md:space-x-6 items-center bg-white shadow-sm rounded-full px-2 md:px-6 py-2"
+        className="flex space-x-2 md:space-x-6 items-center bg-white dark:bg-gray-800 shadow-sm rounded-full px-2 md:px-6 py-2 transition-colors duration-300"
       >
         {menuItems.map((item) => (
           <motion.button
@@ -90,7 +91,7 @@ export default function Dashboard() {
               flex items-center space-x-2 px-2 md:px-3 py-2 rounded-full transition-all
               ${activeSection === item.section 
                 ? 'bg-green-500 text-white' 
-                : 'hover:bg-gray-100 text-gray-600'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
               }
             `}
           >
@@ -106,35 +107,37 @@ export default function Dashboard() {
     if (!user) return null;
 
     return (
-      <div className="relative">
+      <div className="relative flex items-center gap-3">
+        <ThemeToggle />
+        
         <motion.button 
           whileHover={{ scale: 1.05 }}
           onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-          className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-full transition-all"
+          className="flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded-full transition-all"
         >
           <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold shadow-md">
             {user.name[0].toUpperCase()}
           </div>
           <div className="text-left hidden md:block">
-            <p className="font-semibold text-gray-800">{user.name}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+            <p className="font-semibold text-gray-800 dark:text-white">{user.name}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
           </div>
-          <ChevronDown className="w-5 h-5 text-gray-500" />
+          <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
         </motion.button>
 
         {isProfileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute right-0 top-full mt-2 w-56 bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50"
           >
-            <div className="px-4 py-3 border-b border-gray-100">
-              <p className="font-semibold text-gray-800">{user.name}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+              <p className="font-semibold text-gray-800 dark:text-white">{user.name}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
             </div>
             <button 
               onClick={handleLogout}
-              className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 text-left text-red-500 hover:text-red-600 transition-all"
+              className="flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left text-red-500 hover:text-red-600 transition-all"
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Cerrar Sesión</span>
@@ -146,14 +149,14 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <motion.header 
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50"
+        className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-50 transition-colors duration-300"
       >
         <div className="container mx-auto flex justify-between items-center px-4 md:px-6 py-4">
-          <div className="text-xl md:text-2xl font-bold text-green-600">LiveTech</div>
+          <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">LiveTech</div>
           <NavigationMenu />
           <UserProfile />
         </div>
