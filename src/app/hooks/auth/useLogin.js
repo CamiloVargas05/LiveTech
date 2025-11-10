@@ -53,7 +53,7 @@ export const useLogin = () => {
 
     try {
       // Autenticar usuario
-      const respuesta = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, credenciales);
+      const respuesta = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, credenciales);
       
       // Almacenar credenciales de sesión
       localStorage.setItem('token', respuesta.data.token);

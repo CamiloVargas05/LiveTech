@@ -1,201 +1,387 @@
 "use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  UsersIcon, 
-  PlusIcon, 
-  EditIcon, 
-  TrashIcon,
-  SaveIcon 
-} from 'lucide-react';
+import React, { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Users,
+  Edit,
+  Save,
+  XCircle,
+  ShieldCheck,
+  UserPlus,
+  Eye,
+  EyeOff,
+  Search,
+} from "lucide-react";
+import { useGestionUsuarios } from "@/app/hooks/admin/useGestionUsuarios";
 
 const GestionUsuarios = () => {
-  const [nuevoUsuario, setNuevoUsuario] = useState({
-    nombre: '',
-    email: '',
-    rol: '',
-    password: ''
+  const { usuarios, isLoading, error, crearUsuario, actualizarUsuario } =
+    useGestionUsuarios();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+    password: "",
   });
 
-  const [usuarios, setUsuarios] = useState([
-    { 
-      id: 1, 
-      nombre: 'Admin Principal', 
-      email: 'admin@livetech.com', 
-      rol: 'admin', 
-      estado: 'activo' 
-    }
-  ]);
+  const [editingId, setEditingId] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [query, setQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [userToToggle, setUserToToggle] = useState(null);
+
+  const filteredUsers = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return usuarios;
+    return usuarios.filter((u) => (u.name || "").toLowerCase().includes(q));
+  }, [usuarios, query]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNuevoUsuario(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Lógica para crear usuario
-    console.log('Nuevo usuario:', nuevoUsuario);
-    // Resetear formulario
-    setNuevoUsuario({
-      nombre: '',
-      email: '',
-      rol: '',
-      password: ''
-    });
+    try {
+      if (editingId) {
+        await actualizarUsuario(editingId, {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          role: formData.role,
+        });
+        setEditingId(null);
+      } else {
+        await crearUsuario(formData);
+      }
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        role: "",
+        password: "",
+      });
+      setShowPassword(false);
+    } catch (error) {}
   };
 
-  const toggleEstadoUsuario = (id) => {
-    setUsuarios(prev => 
-      prev.map(usuario => 
-        usuario.id === id 
-          ? { ...usuario, estado: usuario.estado === 'activo' ? 'inactivo' : 'activo' }
-          : usuario
-      )
-    );
+  const handleEdit = (usuario) => {
+    setEditingId(usuario.id);
+    setFormData({
+      name: usuario.name,
+      email: usuario.email,
+      phone: usuario.phone || "",
+      role: usuario.role,
+      password: "",
+    });
+    setShowPassword(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      role: "",
+      password: "",
+    });
+    setShowPassword(false);
+  };
+
+  const openToggleModal = (usuario) => {
+    setUserToToggle(usuario);
+    setShowModal(true);
+  };
+
+  const confirmToggleEstado = async () => {
+    if (!userToToggle) return;
+    try {
+      await actualizarUsuario(userToToggle.id, {
+        isActive: !userToToggle.isActive,
+      });
+    } catch (e) {} finally {
+      setShowModal(false);
+      setUserToToggle(null);
+    }
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6 p-4 md:p-8"
-    >
-      <div className="flex items-center space-x-4 mb-8">
-        <UsersIcon className="w-8 h-8 text-green-600" />
-        <h1 className="text-3xl font-bold text-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 p-6 md:p-10">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex items-center space-x-3 mb-8"
+      >
+        <Users className="w-8 h-8 text-green-600 dark:text-green-400" />
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
           Gestión de Usuarios
         </h1>
-      </div>
+      </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Formulario de Registro de Usuario */}
-        <motion.div 
-          initial={{ x: -50, opacity: 0 }}
+      <div className="grid md:grid-cols-2 gap-8">
+        <motion.div
+          initial={{ x: -30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="bg-white rounded-xl shadow-lg p-6"
+          transition={{ duration: 0.5 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 transition-all duration-500 border border-gray-100 dark:border-gray-700"
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Nombre Completo
               </label>
               <input
                 type="text"
-                name="nombre"
-                value={nuevoUsuario.nombre}
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Nombre completo"
+                className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
+                placeholder="Ejemplo: Juan Perez"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Correo Electrónico
               </label>
               <input
                 type="email"
                 name="email"
-                value={nuevoUsuario.email}
+                disabled={!!editingId}
+                value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
                 placeholder="correo@ejemplo.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Teléfono
+              </label>
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
+                placeholder="Ejemplo: 3001234567"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Rol
               </label>
               <select
-                name="rol"
-                value={nuevoUsuario.rol}
+                name="role"
+                value={formData.role}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
                 required
               >
-                <option value="">Seleccionar Rol</option>
+                <option value="">Seleccionar rol</option>
                 <option value="admin">Administrador</option>
                 <option value="tecnico">Técnico</option>
                 <option value="user">Usuario</option>
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={nuevoUsuario.password}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Contraseña"
-                required
-              />
+            {!editingId && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full px-4 pr-10 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
+                    placeholder="********"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex space-x-3 pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`flex-1 flex items-center justify-center gap-2 text-white py-2.5 rounded-lg font-semibold transition-all duration-300 ${
+                  isLoading
+                    ? "bg-green-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-green-500 to-green-600 hover:scale-105 shadow-lg"
+                }`}
+              >
+                {editingId ? (
+                  <>
+                    <Save className="w-5 h-5" />
+                    Guardar Cambios
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5" />
+                    Crear Usuario
+                  </>
+                )}
+              </button>
+
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300"
+                >
+                  <XCircle className="w-5 h-5" />
+                  Cancelar
+                </button>
+              )}
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition flex items-center justify-center"
-            >
-              <SaveIcon className="mr-2" />
-              Crear Usuario
-            </button>
+            {error && <p className="text-red-500 text-center text-sm mt-2">{error}</p>}
           </form>
         </motion.div>
 
-        {/* Lista de Usuarios */}
-        <motion.div 
-          initial={{ x: 50, opacity: 0 }}
+        <motion.div
+          initial={{ x: 30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="bg-white rounded-xl shadow-lg p-6"
+          transition={{ duration: 0.5 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700 transition-all duration-500"
         >
-          <h2 className="text-xl font-semibold mb-4">Usuarios Registrados</h2>
-          
-          {usuarios.map((usuario) => (
-            <div 
-              key={usuario.id} 
-              className="flex justify-between items-center border-b py-3 last:border-b-0"
-            >
-              <div>
-                <p className="font-semibold">{usuario.nombre}</p>
-                <p className="text-sm text-gray-500">{usuario.email}</p>
-                <p className={`text-xs font-medium ${
-                  usuario.estado === 'activo' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {usuario.estado.toUpperCase()}
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => toggleEstadoUsuario(usuario.id)}
-                  className={`px-3 py-1 rounded-lg text-sm transition ${
-                    usuario.estado === 'activo'
-                      ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                      : 'bg-green-50 text-green-600 hover:bg-green-100'
-                  }`}
-                >
-                  {usuario.estado === 'activo' ? 'Desactivar' : 'Activar'}
-                </button>
-                <button className="text-blue-500 hover:text-blue-700">
-                  <EditIcon className="w-5 h-5" />
-                </button>
-              </div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-green-500" />
+              Usuarios Registrados
+            </h2>
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-9 pr-3 py-2 rounded-lg border dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-green-400 outline-none"
+              />
             </div>
-          ))}
+          </div>
+
+          {isLoading ? (
+            <p className="text-gray-500 dark:text-gray-400">Cargando usuarios...</p>
+          ) : filteredUsers.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">No hay usuarios registrados.</p>
+          ) : (
+            <div className="space-y-4">
+              {filteredUsers.map((usuario) => (
+                <motion.div
+                  key={usuario.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-gray-100">{usuario.name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{usuario.email}</p>
+                    <p
+                      className={`text-xs font-medium ${
+                        usuario.isActive ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {usuario.isActive ? "ACTIVO" : "INACTIVO"}
+                    </p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => openToggleModal(usuario)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+                        usuario.isActive
+                          ? "bg-red-50 dark:bg-red-900/30 text-red-600 hover:bg-red-100 dark:hover:bg-red-800/50"
+                          : "bg-green-50 dark:bg-green-900/30 text-green-600 hover:bg-green-100 dark:hover:bg-green-800/50"
+                      }`}
+                    >
+                      {usuario.isActive ? "Desactivar" : "Activar"}
+                    </button>
+                    <button
+                      onClick={() => handleEdit(usuario)}
+                      className="text-blue-500 hover:text-blue-400 transition"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
-    </motion.div>
+
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 10 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl max-w-sm w-full"
+            >
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
+                {userToToggle?.isActive ? "Desactivar usuario" : "Activar usuario"}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {userToToggle?.isActive
+                  ? `¿Seguro que deseas desactivar a ${userToToggle?.name}?`
+                  : `¿Seguro que deseas activar a ${userToToggle?.name}?`}
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setUserToToggle(null);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmToggleEstado}
+                  className={`px-4 py-2 rounded-lg text-white font-semibold transition ${
+                    userToToggle?.isActive
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "bg-green-600 hover:bg-green-700"
+                  }`}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 

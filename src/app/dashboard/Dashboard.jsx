@@ -46,6 +46,13 @@ export default function Dashboard() {
     setUser(parsedUser);
   }, [router]);
 
+  // 🔹 Escucha global para cambiar de sección desde otros componentes
+  useEffect(() => {
+    const handleChangeSection = (e) => setActiveSection(e.detail);
+    window.addEventListener("changeSection", handleChangeSection);
+    return () => window.removeEventListener("changeSection", handleChangeSection);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
@@ -109,7 +116,6 @@ export default function Dashboard() {
     return (
       <div className="relative flex items-center gap-3">
         <ThemeToggle />
-        
         <motion.button 
           whileHover={{ scale: 1.05 }}
           onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
