@@ -1,3 +1,4 @@
+// useGestionEquipos.jsx
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -20,8 +21,7 @@ export const useGestionEquipos = () => {
       const response = await axios.get(`${API_URL}/api/mantenimiento`, {
         headers: getAuthHeaders(),
       });
-      const data = response.data?.mantenimientos || [];
-      setEquipos(data);
+      setEquipos(response.data?.mantenimientos || []);
     } catch (error) {
       setError(error.response?.data?.message || "Error al cargar equipos");
       setEquipos([]);
@@ -38,12 +38,14 @@ export const useGestionEquipos = () => {
       Object.entries(equipo).forEach(([key, value]) => {
         formData.append(key, value);
       });
+
       await axios.post(`${API_URL}/api/mantenimiento`, formData, {
         headers: {
           ...getAuthHeaders(),
           "Content-Type": "multipart/form-data",
         },
       });
+
       await fetchEquipos();
     } catch (error) {
       setError(error.response?.data?.message || "Error al registrar equipo");
@@ -57,9 +59,24 @@ export const useGestionEquipos = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await axios.patch(`${API_URL}/api/mantenimiento/${id}`, data, {
-        headers: getAuthHeaders(),
+      // Crear FormData solo si hay foto nueva
+      let payload;
+      let headers = getAuthHeaders();
+
+      if (data.foto) {
+        payload = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+          payload.append(key, value);
+        });
+        headers["Content-Type"] = "multipart/form-data";
+      } else {
+        payload = data;
+      }
+
+      await axios.patch(`${API_URL}/api/mantenimiento/${id}`, payload, {
+        headers,
       });
+
       await fetchEquipos();
     } catch (error) {
       setError(error.response?.data?.message || "Error al actualizar equipo");
