@@ -140,6 +140,10 @@ export default function MantenimientoPage({ params }) {
     try {
       finalizarLocal();
       await apiPost(`/mantenimiento/${id}/finalizar`);
+      socketRef.current?.emit("finalizar-stream", { mantenimientoId: id });
+      setTimeout(() => {
+        window.close();
+      }, 1500);
     } finally {
       setFinalizando(false);
     }

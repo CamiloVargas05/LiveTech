@@ -9,6 +9,7 @@ import { MessageSquare, Loader2, Video, AlertTriangle, Check, CheckCheck, Lock }
 export default function UsuarioStream({ params }) {
   const [id, setId] = useState(null);
   const [tecnicoDisponible, setTecnicoDisponible] = useState(false);
+  const [finalizado, setFinalizado] = useState(false);
   const [mensajes, setMensajes] = useState([]);
   const [input, setInput] = useState("");
   const [iniciando, setIniciando] = useState(true);
@@ -61,6 +62,7 @@ export default function UsuarioStream({ params }) {
 
     socket.on("stream-finalizado", () => {
       setTecnicoDisponible(false);
+      setFinalizado(true);
       if (videoRef.current) videoRef.current.srcObject = null;
     });
 
@@ -134,10 +136,15 @@ export default function UsuarioStream({ params }) {
             </div>
           </div>
           <div className="relative h-[85vh] flex items-center justify-center bg-black">
-            {tecnicoDisponible && (
+            {finalizado ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-center">
+                <AlertTriangle className="w-10 h-10 text-red-400" />
+                <span className="mt-2 text-lg font-semibold text-gray-200">El mantenimiento ha finalizado</span>
+                <span className="text-sm text-gray-400">Gracias por tu paciencia.</span>
+              </div>
+            ) : tecnicoDisponible ? (
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-            )}
-            {!tecnicoDisponible && (
+            ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-center">
                 <AlertTriangle className="w-10 h-10 text-yellow-400" />
                 <span className="mt-2 text-gray-300">El técnico no se encuentra disponible</span>
@@ -153,7 +160,7 @@ export default function UsuarioStream({ params }) {
             Chat con el técnico
           </div>
 
-          {!tecnicoDisponible && (
+          {!tecnicoDisponible && !finalizado && (
             <div className="absolute inset-0 z-10 bg-black/70 flex flex-col items-center justify-center text-center p-6">
               <Lock className="w-10 h-10 text-yellow-400 mb-2" />
               <span className="text-lg text-gray-200 font-semibold">Chat bloqueado temporalmente</span>
@@ -193,11 +200,11 @@ export default function UsuarioStream({ params }) {
                 onKeyDown={(e) => e.key === "Enter" && enviarMensaje()}
                 placeholder="Escribe un mensaje..."
                 className="flex-1 bg-gray-800 rounded-xl px-4 py-2 outline-none text-sm"
-                disabled={!tecnicoDisponible}
+                disabled={!tecnicoDisponible || finalizado}
               />
               <button
                 onClick={enviarMensaje}
-                disabled={!tecnicoDisponible}
+                disabled={!tecnicoDisponible || finalizado}
                 className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 px-4 py-2 rounded-xl"
               >
                 <MessageSquare className="w-4 h-4" />
