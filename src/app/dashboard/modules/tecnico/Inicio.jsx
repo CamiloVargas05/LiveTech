@@ -7,10 +7,20 @@ import {
   WrenchIcon,
   ArrowUpRightIcon,
 } from "lucide-react";
-import { useDispositivos } from "@/app/hooks/tecnico/useDispositivos";
+import { useInicio } from "@/app/hooks/useInicio";
 
 const Inicio = ({ user }) => {
-  const { dispositivos, isLoading } = useDispositivos();
+  const { data, isLoading } = useInicio();
+
+  const resumen = data?.resumen || {
+    total: 0,
+    pendientes: 0,
+    enRevision: 0,
+    finalizados: 0,
+    porcentajeFinalizado: "0.0",
+  };
+
+  const recientes = data?.recientes || [];
 
   const cardVariants = {
     hidden: { opacity: 0, scale: 0.9 },
@@ -24,8 +34,8 @@ const Inicio = ({ user }) => {
   const statsData = [
     {
       icon: <WrenchIcon className="w-8 h-8 text-blue-500 dark:text-blue-400" />,
-      title: "Reparaciones del Día",
-      value: 5,
+      title: "Total de Mantenimientos",
+      value: resumen.total,
       bgColor: "bg-blue-50 dark:bg-blue-900/30",
       textColor: "text-blue-800 dark:text-blue-300",
     },
@@ -33,23 +43,19 @@ const Inicio = ({ user }) => {
       icon: (
         <ClipboardListIcon className="w-8 h-8 text-green-500 dark:text-green-400" />
       ),
-      title: "Reparaciones Completadas",
-      value: 3,
+      title: "Finalizados",
+      value: resumen.finalizados,
       bgColor: "bg-green-50 dark:bg-green-900/30",
       textColor: "text-green-800 dark:text-green-300",
     },
     {
       icon: <ActivityIcon className="w-8 h-8 text-purple-500 dark:text-purple-400" />,
-      title: "Equipos en Revision",
-      value: 2,
+      title: "En Revisión",
+      value: resumen.enRevision,
       bgColor: "bg-purple-50 dark:bg-purple-900/30",
       textColor: "text-purple-800 dark:text-purple-300",
     },
   ];
-
-  const mantenimientosRecientes = [...dispositivos]
-    .sort((a, b) => new Date(b.creadoEn) - new Date(a.creadoEn))
-    .slice(0, 3);
 
   return (
     <motion.div
@@ -59,6 +65,7 @@ const Inicio = ({ user }) => {
       className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 transition-colors duration-500"
     >
       <div className="container mx-auto">
+        {/* Header */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -73,6 +80,7 @@ const Inicio = ({ user }) => {
           </p>
         </motion.div>
 
+        {/* Tarjetas estadísticas */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -110,6 +118,7 @@ const Inicio = ({ user }) => {
           ))}
         </motion.div>
 
+        {/* Mantenimientos recientes */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,7 +129,9 @@ const Inicio = ({ user }) => {
               Últimos Servicios Asignados
             </h2>
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent("changeSection", { detail: "maintenance" }))}
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("changeSection", { detail: "maintenance" }))
+              }
               className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition-colors font-semibold"
             >
               Ver todos
@@ -131,28 +142,38 @@ const Inicio = ({ user }) => {
             <p className="text-gray-500 dark:text-gray-400 text-center animate-pulse">
               Cargando mantenimientos...
             </p>
-          ) : mantenimientosRecientes.length === 0 ? (
+          ) : recientes.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400 text-center">
               No hay servicios recientes
             </p>
           ) : (
             <div className="space-y-4">
-              {mantenimientosRecientes.map((m) => (
+              {recientes.map((m) => (
                 <motion.div
                   key={m.id}
                   whileHover={{ scale: 1.02 }}
                   className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-all duration-300"
                 >
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-100">
-                      {m.nombreEquipo}{" "}
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        ({m.marca} {m.modelo})
-                      </span>
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {m.descripcionProblema}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={m.fotoUrl}
+                      alt={m.nombreEquipo}
+                      className="w-16 h-16 object-cover rounded-lg border border-gray-300 dark:border-gray-700"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-gray-100">
+                        {m.nombreEquipo}{" "}
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          ({m.marca} {m.modelo})
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {m.descripcionProblema}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(m.fechaCreacion).toLocaleDateString("es-CO")}
+                      </p>
+                    </div>
                   </div>
                   <span
                     className={`text-xs font-medium px-3 py-1 rounded-full ${
@@ -163,9 +184,7 @@ const Inicio = ({ user }) => {
                         : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                     }`}
                   >
-                    {m.estado
-                      .replace("_", " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    {m.estado.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                   </span>
                 </motion.div>
               ))}

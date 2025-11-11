@@ -7,46 +7,60 @@ import {
   WrenchIcon,
   ArrowUpRightIcon,
 } from "lucide-react";
+import { useInicio } from "@/app/hooks/useInicio";
 
 const Inicio = ({ user }) => {
+  const { data, isLoading, error } = useInicio();
+
   const cardVariants = {
     hidden: { opacity: 0, scale: 0.9 },
     visible: {
       opacity: 1,
       scale: 1,
-      transition: {
-        duration: 0.5,
-        type: "spring",
-        stiffness: 100,
-      },
+      transition: { duration: 0.5, type: "spring", stiffness: 100 },
     },
   };
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500 dark:text-red-400">
+        Error al cargar el panel: {error}
+      </div>
+    );
+  }
+
+  if (isLoading || !data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500 dark:text-gray-300 animate-pulse">
+        Cargando información del panel...
+      </div>
+    );
+  }
+
+  // 🔹 Extraemos el resumen del backend real
+  const resumen = data.resumen || {};
+  const recientes = data.recientes || [];
+
+  // 🔹 Adaptamos las estadísticas al body real
   const statsData = [
     {
-      icon: (
-        <ActivityIcon className="w-8 h-8 text-blue-500 dark:text-blue-400" />
-      ),
-      title: "Mantenimientos Actuales",
-      value: 2,
+      icon: <ActivityIcon className="w-8 h-8 text-blue-500 dark:text-blue-400" />,
+      title: "Total Mantenimientos",
+      value: resumen.total ?? 0,
       bgColor: "bg-blue-50 dark:bg-blue-900/30",
       textColor: "text-blue-800 dark:text-blue-300",
     },
     {
-      icon: (
-        <ClipboardListIcon className="w-8 h-8 text-green-500 dark:text-green-400" />
-      ),
-      title: "Servicios Completados",
-      value: 10,
+      icon: <ClipboardListIcon className="w-8 h-8 text-green-500 dark:text-green-400" />,
+      title: "En Revisión",
+      value: resumen.enRevision ?? 0,
       bgColor: "bg-green-50 dark:bg-green-900/30",
       textColor: "text-green-800 dark:text-green-300",
     },
     {
-      icon: (
-        <WrenchIcon className="w-8 h-8 text-purple-500 dark:text-purple-400" />
-      ),
-      title: "Equipos en Servicio",
-      value: 3,
+      icon: <WrenchIcon className="w-8 h-8 text-purple-500 dark:text-purple-400" />,
+      title: "Finalizados",
+      value: resumen.finalizados ?? 0,
       bgColor: "bg-purple-50 dark:bg-purple-900/30",
       textColor: "text-purple-800 dark:text-purple-300",
     },
@@ -60,7 +74,7 @@ const Inicio = ({ user }) => {
       className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 transition-colors duration-500"
     >
       <div className="container mx-auto">
-        {/* Encabezado de Bienvenida */}
+        {/* Encabezado */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -83,10 +97,7 @@ const Inicio = ({ user }) => {
             hidden: { opacity: 0 },
             visible: {
               opacity: 1,
-              transition: {
-                delayChildren: 0.2,
-                staggerChildren: 0.2,
-              },
+              transition: { delayChildren: 0.2, staggerChildren: 0.2 },
             },
           }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
@@ -116,7 +127,7 @@ const Inicio = ({ user }) => {
           ))}
         </motion.div>
 
-        {/* Sección de Últimos Servicios */}
+        {/* Últimos Servicios */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -131,10 +142,30 @@ const Inicio = ({ user }) => {
             </button>
           </div>
 
-          {/* Lista de servicios */}
-          <p className="text-gray-500 dark:text-gray-400 text-center">
-            No hay servicios recientes
-          </p>
+          {recientes.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center">
+              No hay servicios recientes
+            </p>
+          ) : (
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {recientes.map((servicio, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center py-3"
+                >
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-200">
+                      {servicio.nombreEquipo} ({servicio.marca})
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(servicio.fechaCreacion).toLocaleDateString()} —{" "}
+                      {servicio.estado.replace("_", " ")}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>
