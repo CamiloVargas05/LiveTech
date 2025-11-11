@@ -15,7 +15,6 @@ class SocketService {
       withCredentials: true,
       auth: { token },
     });
-
     return this.socket;
   }
 
