@@ -34,12 +34,29 @@ export default function UsuarioStream({ params }) {
     socketRef.current = socket;
 
     socket.on("stream-disponible", () => {
+      console.log("✅ Stream disponible del técnico");
       setTecnicoDisponible(true);
       setIniciando(false);
     });
 
     socket.on("webrtc-offer", async ({ offer }) => {
+      console.log("📞 Offer recibida del técnico");
+      if (!offer) {
+        console.error("❌ Offer inválida");
+        return;
+      }
       iniciarWebRTC(offer);
+    });
+
+    socket.on("webrtc-ice-candidate", ({ candidate }) => {
+      console.log("🧊 ICE candidate recibido");
+      if (peerRef.current && candidate) {
+        try {
+          peerRef.current.signal(candidate);
+        } catch (err) {
+          console.error("❌ Error al procesar ICE candidate:", err);
+        }
+      }
     });
 
     socket.on("chat-mensaje", (mensaje) => {
@@ -64,6 +81,7 @@ export default function UsuarioStream({ params }) {
     });
 
     socket.on("stream-finalizado", () => {
+      console.log("🏁 Stream finalizado");
       setTecnicoDisponible(false);
       setFinalizado(true);
       if (videoRef.current) videoRef.current.srcObject = null;
@@ -72,10 +90,17 @@ export default function UsuarioStream({ params }) {
     });
 
     socket.on("tecnico-desconectado", () => {
+      console.log("⚠️ Técnico desconectado");
       setTecnicoDisponible(false);
       if (videoRef.current) videoRef.current.srcObject = null;
+      if (peerRef.current) {
+        peerRef.current.destroy();
+        peerRef.current = null;
+      }
     });
 
+    // ✅ UNIRSE AL STREAM
+    console.log("📡 Uniéndose al stream...");
     socket.emit("unirse-stream", { mantenimientoId: id });
 
     return () => {
@@ -85,22 +110,63 @@ export default function UsuarioStream({ params }) {
   }, [id, token, usuarioEmail]);
 
   const iniciarWebRTC = (offer) => {
+    if (peerRef.current) {
+      console.log("⚠️ Ya existe un peer, destruyendo el anterior");
+      peerRef.current.destroy();
+    }
+
+    console.log("🚀 Creando peer como receptor...");
+    
     const peer = new SimplePeer({
       initiator: false,
       trickle: true,
-      config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
+      config: { 
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+        ] 
+      },
     });
+
     peer.on("signal", (data) => {
-      if (data.type === "answer") socketRef.current.emit("webrtc-answer", { mantenimientoId: id, answer: data });
+      if (data.type === "answer") {
+        console.log("📤 Enviando answer al técnico");
+        socketRef.current?.emit("webrtc-answer", { 
+          mantenimientoId: id, 
+          answer: data 
+        });
+      } else if (data.candidate) {
+        console.log("📤 Enviando ICE candidate");
+        socketRef.current?.emit("webrtc-ice-candidate", { 
+          mantenimientoId: id, 
+          candidate: data 
+        });
+      }
     });
+
     peer.on("stream", (stream) => {
+      console.log("🎥 Stream recibido del técnico!");
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setTecnicoDisponible(true);
       }
     });
-    peer.signal(offer);
-    peerRef.current = peer;
+
+    peer.on("connect", () => {
+      console.log("✅ Peer conectado exitosamente");
+    });
+
+    peer.on("error", (err) => {
+      console.error("❌ Error en peer:", err);
+    });
+
+    try {
+      peer.signal(offer);
+      peerRef.current = peer;
+      console.log("✅ Offer procesada, esperando stream...");
+    } catch (err) {
+      console.error("❌ Error al procesar offer:", err);
+    }
   };
 
   const enviarMensaje = () => {
@@ -139,7 +205,7 @@ export default function UsuarioStream({ params }) {
           <div className="flex justify-between px-6 py-3 border-b border-gray-800">
             <div className="flex items-center gap-2 text-green-400 text-lg font-semibold">
               <Video className="w-6 h-6" />
-              <span>Mantenimiento #{id}</span>
+              <span>Mantenimiento #{id.slice(0, 8)}</span>
             </div>
           </div>
           <div className="relative h-[85vh] flex items-center justify-center bg-black">
@@ -150,12 +216,26 @@ export default function UsuarioStream({ params }) {
                 <span className="text-sm text-gray-400">Gracias por tu paciencia.</span>
               </div>
             ) : tecnicoDisponible ? (
-              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                className="w-full h-full object-cover" 
+              />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-center">
-                <AlertTriangle className="w-10 h-10 text-yellow-400" />
-                <span className="mt-2 text-gray-300">El técnico no se encuentra disponible</span>
-                <span className="text-sm text-gray-400">Esperando reconexión...</span>
+                {iniciando ? (
+                  <>
+                    <Loader2 className="w-10 h-10 text-yellow-400 animate-spin" />
+                    <span className="mt-2 text-gray-300">Conectando con el técnico...</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-10 h-10 text-yellow-400" />
+                    <span className="mt-2 text-gray-300">El técnico no se encuentra disponible</span>
+                    <span className="text-sm text-gray-400">Esperando reconexión...</span>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -177,9 +257,12 @@ export default function UsuarioStream({ params }) {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {mensajes.map((m, i) => (
-              <div key={m.clientId || m.timestamp || i} className={`max-w-[85%] px-3 py-2 rounded-xl ${m.yo ? "bg-emerald-600/20 ml-auto text-right" : "bg-gray-800/70"}`}>
+              <div 
+                key={m.clientId || m.timestamp || i} 
+                className={`max-w-[85%] px-3 py-2 rounded-xl ${m.yo ? "bg-emerald-600/20 ml-auto text-right" : "bg-gray-800/70"}`}
+              >
                 <div className="text-xs text-gray-400">{m.yo ? "Tú" : m.usuarioNombre || m.usuarioEmail}</div>
-                <div className="text-sm flex items-center gap-1">
+                <div className="text-sm flex items-center gap-1 justify-end">
                   <span>{m.mensaje}</span>
                   {m.yo && (m.entregado ? <CheckCheck className="w-3 h-3 text-blue-400" /> : <Check className="w-3 h-3 text-gray-400" />)}
                 </div>
@@ -192,12 +275,16 @@ export default function UsuarioStream({ params }) {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && enviarMensaje()}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && enviarMensaje()}
                 placeholder="Escribe un mensaje..."
                 className="flex-1 bg-gray-800 rounded-xl px-4 py-2 outline-none text-sm"
                 disabled={!tecnicoDisponible || finalizado}
               />
-              <button onClick={enviarMensaje} disabled={!tecnicoDisponible || finalizado} className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 px-4 py-2 rounded-xl">
+              <button 
+                onClick={enviarMensaje} 
+                disabled={!tecnicoDisponible || finalizado} 
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 px-4 py-2 rounded-xl"
+              >
                 <MessageSquare className="w-4 h-4" />
               </button>
             </div>
