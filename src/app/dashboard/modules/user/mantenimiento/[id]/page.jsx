@@ -18,22 +18,14 @@ export default function UsuarioStream({ params }) {
   const socketRef = useRef(null);
   const peerRef = useRef(null);
 
-  const token = useMemo(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("token") || "";
-    return "";
-  }, []);
-
+  const token = useMemo(() => (typeof window !== "undefined" ? localStorage.getItem("token") || "" : ""), []);
   const usuarioEmail = useMemo(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("email") || "usuario";
+    if (typeof window !== "undefined") return (localStorage.getItem("email") || "usuario").toLowerCase();
     return "usuario";
   }, []);
 
   useEffect(() => {
-    if (typeof params?.then === "function") {
-      params.then((resolved) => setId(resolved.id));
-    } else if (params?.id) {
-      setId(params.id);
-    }
+    if (params?.id) setId(params.id);
   }, [params]);
 
   useEffect(() => {
@@ -51,19 +43,32 @@ export default function UsuarioStream({ params }) {
     });
 
     socket.on("chat-mensaje", (mensaje) => {
-      if (mensaje.usuarioEmail === usuarioEmail) {
-        setMensajes((prev) =>
-          prev.map((m) => (m.timestamp === mensaje.timestamp ? { ...m, entregado: true } : m))
-        );
-      } else {
-        setMensajes((prev) => [...prev, { ...mensaje, entregado: true }]);
-      }
+      const from = (mensaje.usuarioEmail || "").toLowerCase();
+      setMensajes((prev) => {
+        if (from === usuarioEmail) {
+          const idx = prev.findIndex(
+            (m) =>
+              (mensaje.clientId && m.clientId === mensaje.clientId) ||
+              (mensaje.timestamp && m.timestamp === mensaje.timestamp)
+          );
+          if (idx !== -1) {
+            const copy = [...prev];
+            copy[idx] = { ...copy[idx], entregado: true, yo: true };
+            return copy;
+          }
+          return [...prev, { ...mensaje, yo: true, entregado: true }];
+        } else {
+          return [...prev, { ...mensaje, yo: false, entregado: true }];
+        }
+      });
     });
 
     socket.on("stream-finalizado", () => {
       setTecnicoDisponible(false);
       setFinalizado(true);
       if (videoRef.current) videoRef.current.srcObject = null;
+      window.opener?.location.reload();
+      setTimeout(() => window.close(), 1500);
     });
 
     socket.on("tecnico-desconectado", () => {
@@ -85,26 +90,27 @@ export default function UsuarioStream({ params }) {
       trickle: true,
       config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
     });
-
     peer.on("signal", (data) => {
-      if (data.type === "answer")
-        socketRef.current.emit("webrtc-answer", { mantenimientoId: id, answer: data });
+      if (data.type === "answer") socketRef.current.emit("webrtc-answer", { mantenimientoId: id, answer: data });
     });
-
     peer.on("stream", (stream) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setTecnicoDisponible(true);
       }
     });
-
     peer.signal(offer);
     peerRef.current = peer;
   };
 
   const enviarMensaje = () => {
     if (!input.trim() || !tecnicoDisponible) return;
+    const clientId =
+      (typeof crypto !== "undefined" && crypto.randomUUID && crypto.randomUUID()) ||
+      `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     const nuevoMensaje = {
+      clientId,
       mantenimientoId: id,
       mensaje: input.trim(),
       usuarioNombre: "Tú",
@@ -113,6 +119,7 @@ export default function UsuarioStream({ params }) {
       entregado: false,
       timestamp: Date.now(),
     };
+
     setMensajes((prev) => [...prev, nuevoMensaje]);
     socketRef.current?.emit("chat-mensaje", nuevoMensaje);
     setInput("");
@@ -164,29 +171,17 @@ export default function UsuarioStream({ params }) {
             <div className="absolute inset-0 z-10 bg-black/70 flex flex-col items-center justify-center text-center p-6">
               <Lock className="w-10 h-10 text-yellow-400 mb-2" />
               <span className="text-lg text-gray-200 font-semibold">Chat bloqueado temporalmente</span>
-              <span className="text-sm text-gray-400">
-                El chat estará disponible cuando el técnico se reconecte.
-              </span>
+              <span className="text-sm text-gray-400">El chat estará disponible cuando el técnico se reconecte.</span>
             </div>
           )}
 
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {mensajes.map((m, i) => (
-              <div
-                key={i}
-                className={`max-w-[85%] px-3 py-2 rounded-xl ${
-                  m.yo ? "bg-emerald-600/20 ml-auto text-right" : "bg-gray-800/70"
-                }`}
-              >
-                <div className="text-xs text-gray-400">{m.yo ? "Tú" : m.usuarioNombre}</div>
+              <div key={m.clientId || m.timestamp || i} className={`max-w-[85%] px-3 py-2 rounded-xl ${m.yo ? "bg-emerald-600/20 ml-auto text-right" : "bg-gray-800/70"}`}>
+                <div className="text-xs text-gray-400">{m.yo ? "Tú" : m.usuarioNombre || m.usuarioEmail}</div>
                 <div className="text-sm flex items-center gap-1">
                   <span>{m.mensaje}</span>
-                  {m.yo &&
-                    (m.entregado ? (
-                      <CheckCheck className="w-3 h-3 text-blue-400" />
-                    ) : (
-                      <Check className="w-3 h-3 text-gray-400" />
-                    ))}
+                  {m.yo && (m.entregado ? <CheckCheck className="w-3 h-3 text-blue-400" /> : <Check className="w-3 h-3 text-gray-400" />)}
                 </div>
               </div>
             ))}
@@ -202,11 +197,7 @@ export default function UsuarioStream({ params }) {
                 className="flex-1 bg-gray-800 rounded-xl px-4 py-2 outline-none text-sm"
                 disabled={!tecnicoDisponible || finalizado}
               />
-              <button
-                onClick={enviarMensaje}
-                disabled={!tecnicoDisponible || finalizado}
-                className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 px-4 py-2 rounded-xl"
-              >
+              <button onClick={enviarMensaje} disabled={!tecnicoDisponible || finalizado} className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 px-4 py-2 rounded-xl">
                 <MessageSquare className="w-4 h-4" />
               </button>
             </div>

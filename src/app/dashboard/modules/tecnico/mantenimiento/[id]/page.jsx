@@ -20,27 +20,18 @@ export default function MantenimientoPage({ params }) {
   const peerRef = useRef(null);
   const streamRef = useRef(null);
 
-  const token = useMemo(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("token") || "";
-    return "";
-  }, []);
-
+  const token = useMemo(() => (typeof window !== "undefined" ? localStorage.getItem("token") || "" : ""), []);
   const usuarioEmail = useMemo(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("email") || "tecnico";
+    if (typeof window !== "undefined") return (localStorage.getItem("email") || "tecnico").toLowerCase();
     return "tecnico";
   }, []);
 
   useEffect(() => {
-    if (typeof params?.then === "function") {
-      params.then((resolved) => setId(resolved.id));
-    } else if (params?.id) {
-      setId(params.id);
-    }
+    if (params?.id) setId(params.id);
   }, [params]);
 
   useEffect(() => {
     if (!id) return;
-
     const socket = socketService.connect(token);
     socketRef.current = socket;
 
@@ -49,9 +40,7 @@ export default function MantenimientoPage({ params }) {
       iniciarWebRTC();
     });
 
-    socket.on("usuario-desconectado", () => {
-      setUsuarioConectado(false);
-    });
+    socket.on("usuario-desconectado", () => setUsuarioConectado(false));
 
     socket.on("webrtc-answer", async ({ answer }) => {
       if (peerRef.current) await peerRef.current.signal(answer);
@@ -62,18 +51,27 @@ export default function MantenimientoPage({ params }) {
     });
 
     socket.on("chat-mensaje", (mensaje) => {
-      if (mensaje.usuarioEmail === usuarioEmail) {
-        setMensajes((prev) =>
-          prev.map((m) => (m.timestamp === mensaje.timestamp ? { ...m, entregado: true } : m))
-        );
-      } else {
-        setMensajes((prev) => [...prev, { ...mensaje, entregado: true }]);
-      }
+      const from = (mensaje.usuarioEmail || "").toLowerCase();
+      setMensajes((prev) => {
+        if (from === usuarioEmail) {
+          const idx = prev.findIndex(
+            (m) =>
+              (mensaje.clientId && m.clientId === mensaje.clientId) ||
+              (mensaje.timestamp && m.timestamp === mensaje.timestamp)
+          );
+          if (idx !== -1) {
+            const copy = [...prev];
+            copy[idx] = { ...copy[idx], entregado: true, yo: true };
+            return copy;
+          }
+          return [...prev, { ...mensaje, yo: true, entregado: true }];
+        } else {
+          return [...prev, { ...mensaje, yo: false, entregado: true }];
+        }
+      });
     });
 
-    socket.on("disconnect", () => {
-      socket.emit("tecnico-desconectado", { mantenimientoId: id });
-    });
+    socket.on("disconnect", () => socket.emit("tecnico-desconectado", { mantenimientoId: id }));
 
     (async () => {
       try {
@@ -102,20 +100,21 @@ export default function MantenimientoPage({ params }) {
       stream: media,
       config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
     });
-
     peer.on("signal", (data) => {
-      if (data.type === "offer")
-        socketRef.current?.emit("webrtc-offer", { mantenimientoId: id, offer: data });
-      else if (data.candidate)
-        socketRef.current?.emit("webrtc-ice-candidate", { mantenimientoId: id, candidate: data });
+      if (data.type === "offer") socketRef.current?.emit("webrtc-offer", { mantenimientoId: id, offer: data });
+      else if (data.candidate) socketRef.current?.emit("webrtc-ice-candidate", { mantenimientoId: id, candidate: data });
     });
-
     peerRef.current = peer;
   };
 
   const enviarMensaje = () => {
     if (!input.trim()) return;
+    const clientId =
+      (typeof crypto !== "undefined" && crypto.randomUUID && crypto.randomUUID()) ||
+      `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     const nuevoMensaje = {
+      clientId,
       mantenimientoId: id,
       mensaje: input.trim(),
       usuarioNombre: "Tú",
@@ -124,6 +123,7 @@ export default function MantenimientoPage({ params }) {
       entregado: false,
       timestamp: Date.now(),
     };
+
     setMensajes((prev) => [...prev, nuevoMensaje]);
     socketRef.current?.emit("chat-mensaje", nuevoMensaje);
     setInput("");
@@ -141,9 +141,11 @@ export default function MantenimientoPage({ params }) {
       finalizarLocal();
       await apiPost(`/api/mantenimiento/${id}/finalizar`);
       socketRef.current?.emit("finalizar-stream", { mantenimientoId: id });
+      localStorage.removeItem("mantenimientoActivo");
+      window.opener?.location.reload();
       setTimeout(() => {
         window.close();
-      }, 1500);
+      }, 1200);
     } finally {
       setFinalizando(false);
     }
@@ -167,11 +169,7 @@ export default function MantenimientoPage({ params }) {
             </div>
             <div className="flex items-center gap-4">
               <UserCheck className={`w-4 h-4 ${usuarioConectado ? "text-green-400" : "text-gray-500"}`} />
-              <button
-                onClick={finalizar}
-                disabled={finalizando}
-                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
-              >
+              <button onClick={finalizar} disabled={finalizando} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
                 {finalizando ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                 Finalizar
               </button>
@@ -195,21 +193,11 @@ export default function MantenimientoPage({ params }) {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {mensajes.map((m, i) => (
-              <div
-                key={i}
-                className={`max-w-[85%] px-3 py-2 rounded-xl ${
-                  m.yo ? "bg-emerald-600/20 ml-auto text-right" : "bg-gray-800/70"
-                }`}
-              >
+              <div key={m.clientId || m.timestamp || i} className={`max-w-[85%] px-3 py-2 rounded-xl ${m.yo ? "bg-emerald-600/20 ml-auto text-right" : "bg-gray-800/70"}`}>
                 <div className="text-xs text-gray-400">{m.yo ? "Tú" : m.usuarioNombre}</div>
                 <div className="text-sm flex items-center gap-1">
                   <span>{m.mensaje}</span>
-                  {m.yo &&
-                    (m.entregado ? (
-                      <CheckCheck className="w-3 h-3 text-blue-400" />
-                    ) : (
-                      <Check className="w-3 h-3 text-gray-400" />
-                    ))}
+                  {m.yo && (m.entregado ? <CheckCheck className="w-3 h-3 text-blue-400" /> : <Check className="w-3 h-3 text-gray-400" />)}
                 </div>
               </div>
             ))}

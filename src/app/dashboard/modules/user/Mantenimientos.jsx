@@ -19,23 +19,17 @@ const Mantenimientos = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 space-y-6 p-4 md:p-8 transition-colors duration-500"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 space-y-6 p-4 md:p-8"
     >
       <div className="flex items-center space-x-4 mb-8">
         <Wrench className="w-8 h-8 text-green-600 dark:text-green-400" />
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-          Mantenimientos en Curso
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Mantenimientos en Curso</h1>
       </div>
 
       {isLoading ? (
-        <p className="text-center text-gray-500 dark:text-gray-400 animate-pulse">
-          Cargando mantenimientos...
-        </p>
+        <p className="text-center text-gray-500 dark:text-gray-400 animate-pulse">Cargando mantenimientos...</p>
       ) : error ? (
-        <p className="text-center text-red-500 dark:text-red-400">
-          Error al cargar los mantenimientos: {error}
-        </p>
+        <p className="text-center text-red-500 dark:text-red-400">Error al cargar los mantenimientos: {error}</p>
       ) : mantenimientos.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
@@ -43,9 +37,7 @@ const Mantenimientos = () => {
           className="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700"
         >
           <AlertCircle className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-500 mb-4" />
-          <h2 className="text-xl text-gray-600 dark:text-gray-300">
-            No tienes mantenimientos en curso
-          </h2>
+          <h2 className="text-xl text-gray-600 dark:text-gray-300">No tienes mantenimientos en curso</h2>
         </motion.div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -67,7 +59,6 @@ const Mantenimientos = () => {
                   />
                 </div>
               )}
-
               <div className="p-6 flex flex-col justify-between min-h-[280px]">
                 <div>
                   <div className="flex justify-between items-center mb-4">
@@ -79,7 +70,6 @@ const Mantenimientos = () => {
                         {mantenimiento.marca} - {mantenimiento.modelo}
                       </p>
                     </div>
-
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
                         estadoColores[mantenimiento.estado] ||
@@ -91,7 +81,6 @@ const Mantenimientos = () => {
                         .replace(/\b\w/g, (c) => c.toUpperCase())}
                     </span>
                   </div>
-
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm">
@@ -103,7 +92,6 @@ const Mantenimientos = () => {
                         {mantenimiento.tecnico?.nombre || "Sin técnico asignado"}
                       </span>
                     </div>
-
                     <div className="flex items-center space-x-2">
                       <Clock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                       <span className="text-gray-600 dark:text-gray-300">
@@ -111,7 +99,6 @@ const Mantenimientos = () => {
                       </span>
                     </div>
                   </div>
-
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
                     <div
                       className="bg-green-500 h-2.5 rounded-full"
@@ -126,14 +113,10 @@ const Mantenimientos = () => {
                     ></div>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 text-right">
-                    {mantenimiento.estado === "finalizado"
-                      ? "Completado"
-                      : "En progreso"}
+                    {mantenimiento.estado === "finalizado" ? "Completado" : "En progreso"}
                   </p>
                 </div>
-
-                {(mantenimiento.estado === "en_revision" ||
-                  mantenimiento.estado === "en_proceso") && (
+                {(mantenimiento.estado === "en_revision" || mantenimiento.estado === "en_proceso") && (
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => {

@@ -22,7 +22,8 @@ export const useDispositivos = () => {
       const res = await axios.get(`${API_URL}/api/mantenimiento/mis-mantenimientos`, {
         headers: getAuthHeaders(),
       });
-      setDispositivos(res.data?.mantenimientos || []);
+      const activos = (res.data?.mantenimientos || []).filter((d) => d.estado !== "finalizado");
+      setDispositivos(activos);
     } catch (err) {
       setError(err.response?.data?.message || "Error al cargar dispositivos");
       setDispositivos([]);
@@ -50,5 +51,5 @@ export const useDispositivos = () => {
     }
   };
 
-  return { dispositivos, isLoading, error, iniciarMantenimiento };
+  return { dispositivos, isLoading, error, iniciarMantenimiento, fetchDispositivos };
 };
