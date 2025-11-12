@@ -219,7 +219,7 @@ export default function MantenimientoPage({ params }) {
     setFinalizando(true);
     try {
       finalizarLocal();
-      await apiPost(`api/mantenimiento/${id}/finalizar`);
+      await apiPost(`/api/mantenimiento/${id}/finalizar`);
       socketRef.current?.emit("finalizar-stream", { mantenimientoId: id });
       localStorage.removeItem("mantenimientoActivo");
       window.opener?.location.reload();
