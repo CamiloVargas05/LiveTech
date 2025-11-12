@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import SimplePeer from "simple-peer";
 import socketService from "@/services/socket.service";
-import { MessageSquare, Loader2, Video, AlertTriangle, Check, CheckCheck, Lock } from "lucide-react";
+import { MessageSquare, Loader2, Video, AlertTriangle, Check, CheckCheck, Lock, Play } from "lucide-react";
 
 export default function UsuarioStream({ params }) {
   const [id, setId] = useState(null);
@@ -13,6 +13,7 @@ export default function UsuarioStream({ params }) {
   const [mensajes, setMensajes] = useState([]);
   const [input, setInput] = useState("");
   const [iniciando, setIniciando] = useState(true);
+  const [videoReady, setVideoReady] = useState(false); // ← NUEVO
 
   const videoRef = useRef(null);
   const socketRef = useRef(null);
@@ -60,6 +61,7 @@ export default function UsuarioStream({ params }) {
     });
 
     socket.on("chat-mensaje", (mensaje) => {
+      console.log("💬 Mensaje recibido:", mensaje);
       const from = (mensaje.usuarioEmail || "").toLowerCase();
       setMensajes((prev) => {
         if (from === usuarioEmail) {
@@ -99,7 +101,6 @@ export default function UsuarioStream({ params }) {
       }
     });
 
-    // ✅ UNIRSE AL STREAM
     console.log("📡 Uniéndose al stream...");
     socket.emit("unirse-stream", { mantenimientoId: id });
 
@@ -144,11 +145,22 @@ export default function UsuarioStream({ params }) {
       }
     });
 
-    peer.on("stream", (stream) => {
+    peer.on("stream", async (stream) => {
       console.log("🎥 Stream recibido del técnico!");
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        setTecnicoDisponible(true);
+        
+        // ✅ FORZAR REPRODUCCIÓN
+        try {
+          await videoRef.current.play();
+          console.log("▶️ Video reproduciendo automáticamente");
+          setVideoReady(true);
+          setTecnicoDisponible(true);
+        } catch (err) {
+          console.warn("⚠️ No se pudo reproducir automáticamente, requiere interacción del usuario");
+          setVideoReady(false);
+          setTecnicoDisponible(true);
+        }
       }
     });
 
@@ -169,6 +181,19 @@ export default function UsuarioStream({ params }) {
     }
   };
 
+  // ✅ FUNCIÓN PARA REPRODUCIR MANUALMENTE
+  const reproducirVideo = async () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      try {
+        await videoRef.current.play();
+        setVideoReady(true);
+        console.log("▶️ Video reproducido manualmente");
+      } catch (err) {
+        console.error("❌ Error al reproducir:", err);
+      }
+    }
+  };
+
   const enviarMensaje = () => {
     if (!input.trim() || !tecnicoDisponible) return;
     const clientId =
@@ -186,6 +211,7 @@ export default function UsuarioStream({ params }) {
       timestamp: Date.now(),
     };
 
+    console.log("📤 Enviando mensaje:", nuevoMensaje);
     setMensajes((prev) => [...prev, nuevoMensaje]);
     socketRef.current?.emit("chat-mensaje", nuevoMensaje);
     setInput("");
@@ -216,12 +242,27 @@ export default function UsuarioStream({ params }) {
                 <span className="text-sm text-gray-400">Gracias por tu paciencia.</span>
               </div>
             ) : tecnicoDisponible ? (
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                className="w-full h-full object-cover" 
-              />
+              <>
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  className="w-full h-full object-cover" 
+                />
+                {/* ✅ BOTÓN DE PLAY SI NO SE REPRODUCE */}
+                {!videoReady && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
+                    <button
+                      onClick={reproducirVideo}
+                      className="bg-emerald-600 hover:bg-emerald-700 px-8 py-4 rounded-full flex items-center gap-3 text-lg font-semibold"
+                    >
+                      <Play className="w-6 h-6" />
+                      Reproducir video
+                    </button>
+                    <span className="mt-4 text-sm text-gray-400">Haz clic para ver el stream del técnico</span>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-center">
                 {iniciando ? (
@@ -261,7 +302,7 @@ export default function UsuarioStream({ params }) {
                 key={m.clientId || m.timestamp || i} 
                 className={`max-w-[85%] px-3 py-2 rounded-xl ${m.yo ? "bg-emerald-600/20 ml-auto text-right" : "bg-gray-800/70"}`}
               >
-                <div className="text-xs text-gray-400">{m.yo ? "Tú" : m.usuarioNombre || m.usuarioEmail}</div>
+                <div className="text-xs text-gray-400">{m.yo ? "Tú" : (m.usuarioNombre || m.usuarioEmail)}</div>
                 <div className="text-sm flex items-center gap-1 justify-end">
                   <span>{m.mensaje}</span>
                   {m.yo && (m.entregado ? <CheckCheck className="w-3 h-3 text-blue-400" /> : <Check className="w-3 h-3 text-gray-400" />)}

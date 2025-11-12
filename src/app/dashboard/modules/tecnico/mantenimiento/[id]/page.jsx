@@ -181,26 +181,27 @@ export default function MantenimientoPage({ params }) {
   };
 
   const enviarMensaje = () => {
-    if (!input.trim()) return;
-    const clientId =
-      (typeof crypto !== "undefined" && crypto.randomUUID && crypto.randomUUID()) ||
-      `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (!input.trim()) return;
+  const clientId =
+    (typeof crypto !== "undefined" && crypto.randomUUID && crypto.randomUUID()) ||
+    `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    const nuevoMensaje = {
-      clientId,
-      mantenimientoId: id,
-      mensaje: input.trim(),
-      usuarioNombre: "Tú",
-      usuarioEmail,
-      yo: true,
-      entregado: false,
-      timestamp: Date.now(),
-    };
-
-    setMensajes((prev) => [...prev, nuevoMensaje]);
-    socketRef.current?.emit("chat-mensaje", nuevoMensaje);
-    setInput("");
+  const nuevoMensaje = {
+    clientId,
+    mantenimientoId: id,
+    mensaje: input.trim(),
+    usuarioNombre: "Tú",
+    usuarioEmail,
+    yo: true,
+    entregado: false,
+    timestamp: Date.now(),
   };
+
+  console.log("📤 Enviando mensaje:", nuevoMensaje); // ← AGREGAR
+  setMensajes((prev) => [...prev, nuevoMensaje]);
+  socketRef.current?.emit("chat-mensaje", nuevoMensaje);
+  setInput("");
+};
 
   const finalizarLocal = () => {
     socketRef.current?.emit("finalizar-stream", { mantenimientoId: id });
