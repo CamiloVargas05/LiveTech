@@ -2,7 +2,7 @@ export async function apiPost(path, body) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
   
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${path}`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL}${path}`;
   console.log("📡 API POST:", url);
   
   const res = await fetch(url, {
