@@ -36,6 +36,16 @@ export const useDispositivos = () => {
     fetchDispositivos();
   }, []);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "mantenimientoFinalizado") {
+        fetchDispositivos();
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   const iniciarMantenimiento = async (id) => {
     setIsLoading(true);
     setError(null);

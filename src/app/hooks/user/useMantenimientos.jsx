@@ -22,7 +22,8 @@ export const useMantenimientos = () => {
       const res = await axios.get(`${API_URL}/api/mantenimiento/mis-mantenimientos`, {
         headers: getAuthHeaders(),
       });
-      setMantenimientos(res.data?.mantenimientos || []);
+      const activos = (res.data?.mantenimientos || []).filter(m => m.estado !== "finalizado");
+      setMantenimientos(activos);
     } catch (err) {
       setError(err.response?.data?.message || "Error al cargar mantenimientos");
       setMantenimientos([]);
@@ -33,6 +34,16 @@ export const useMantenimientos = () => {
 
   useEffect(() => {
     fetchMantenimientos();
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "mantenimientoFinalizadoUsuario") {
+        fetchMantenimientos();
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
   }, []);
 
   return { mantenimientos, isLoading, error, fetchMantenimientos };

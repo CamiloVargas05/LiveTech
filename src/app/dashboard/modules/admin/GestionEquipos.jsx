@@ -11,9 +11,11 @@ import {
   Image as ImageIcon,
   Search,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { useGestionEquipos } from "@/app/hooks/admin/useGestionEquipos";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const GestionEquipos = () => {
   const {
@@ -38,15 +40,14 @@ const GestionEquipos = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [filteredUsuarios, setFilteredUsuarios] = useState([]);
   const [filteredTecnicos, setFilteredTecnicos] = useState([]);
-
   const [queryUsuario, setQueryUsuario] = useState("");
   const [queryTecnico, setQueryTecnico] = useState("");
-
   const [editingId, setEditingId] = useState(null);
   const [preview, setPreview] = useState(null);
   const [buscar, setBuscar] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [equipoAEliminar, setEquipoAEliminar] = useState(null);
+  const [loadingAction, setLoadingAction] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -103,15 +104,19 @@ const GestionEquipos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoadingAction(true);
     try {
       if (editingId) {
         await actualizarEquipo(editingId, formData);
-        setEditingId(null);
+        toast.success("Equipo actualizado exitosamente");
       } else {
         await crearEquipo(formData);
+        toast.success("Equipo registrado exitosamente");
       }
       resetForm();
-    } catch {}
+    } finally {
+      setLoadingAction(false);
+    }
   };
 
   const resetForm = () => {
@@ -150,10 +155,15 @@ const GestionEquipos = () => {
   };
 
   const confirmarEliminacion = async () => {
-    if (equipoAEliminar) {
+    if (!equipoAEliminar) return;
+    setLoadingAction(true);
+    try {
       await eliminarEquipo(equipoAEliminar.id);
+      toast.success("Equipo eliminado correctamente");
       setShowModal(false);
       setEquipoAEliminar(null);
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -163,7 +173,14 @@ const GestionEquipos = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-6 md:p-10 transition-colors duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-6 md:p-10 transition-colors duration-500 relative">
+      
+      {loadingAction && (
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+          <Loader2 className="w-12 h-12 animate-spin text-green-600" />
+        </div>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -177,6 +194,7 @@ const GestionEquipos = () => {
       </motion.div>
 
       <div className="grid md:grid-cols-2 gap-8">
+        
         <motion.div
           initial={{ x: -30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -184,9 +202,10 @@ const GestionEquipos = () => {
           className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700"
         >
           <form onSubmit={handleSubmit} className="space-y-5">
+            
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Nombre del Equipo
+                Nombre para el mantenimiento
               </label>
               <input
                 type="text"
@@ -214,6 +233,7 @@ const GestionEquipos = () => {
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Modelo
@@ -223,7 +243,7 @@ const GestionEquipos = () => {
                   name="modelo"
                   value={formData.modelo}
                   onChange={handleChange}
-                  placeholder="Ej: Inspiron15"
+                  placeholder="Ej: Inspiron 15"
                   className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none"
                   required
                 />
@@ -239,7 +259,7 @@ const GestionEquipos = () => {
                 value={formData.descripcionProblema}
                 onChange={handleChange}
                 rows="3"
-                placeholder="Ej: No enciende, posible problema de batería"
+                placeholder="Ej: No enciende, posible daño de batería"
                 className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none"
                 required
               ></textarea>
@@ -251,10 +271,10 @@ const GestionEquipos = () => {
               </label>
               <input
                 type="text"
-                placeholder="Buscar usuario por nombre o correo..."
+                placeholder="Buscar usuario..."
                 value={queryUsuario}
                 onChange={(e) => setQueryUsuario(e.target.value)}
-                className="w-full mb-2 px-4 py-2 rounded-lg border dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-green-400 outline-none"
+                className="w-full mb-2 px-4 py-2 rounded-lg border dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white"
               />
               <select
                 name="usuarioId"
@@ -278,10 +298,10 @@ const GestionEquipos = () => {
               </label>
               <input
                 type="text"
-                placeholder="Buscar técnico por nombre o correo..."
+                placeholder="Buscar técnico..."
                 value={queryTecnico}
                 onChange={(e) => setQueryTecnico(e.target.value)}
-                className="w-full mb-2 px-4 py-2 rounded-lg border dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-green-400 outline-none"
+                className="w-full mb-2 px-4 py-2 rounded-lg border dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white"
               />
               <select
                 name="tecnicoId"
@@ -343,11 +363,12 @@ const GestionEquipos = () => {
                 <Save className="w-5 h-5" />
                 {editingId ? "Actualizar Equipo" : "Registrar Equipo"}
               </button>
+
               {editingId && (
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold"
                 >
                   Cancelar
                 </button>
@@ -367,6 +388,7 @@ const GestionEquipos = () => {
               <Monitor className="w-5 h-5 text-green-500" />
               Equipos Registrados
             </h2>
+
             <div className="relative">
               <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
               <input
@@ -401,6 +423,7 @@ const GestionEquipos = () => {
                         className="w-14 h-14 object-cover rounded-lg border dark:border-gray-600"
                       />
                     )}
+
                     <div>
                       <p className="font-semibold text-gray-800 dark:text-gray-100">
                         {equipo.nombreEquipo}
@@ -413,6 +436,7 @@ const GestionEquipos = () => {
                       </p>
                     </div>
                   </div>
+
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(equipo)}
@@ -420,6 +444,7 @@ const GestionEquipos = () => {
                     >
                       <Edit className="w-5 h-5" />
                     </button>
+
                     <button
                       onClick={() => handleDelete(equipo)}
                       className="text-red-500 hover:text-red-400 transition"
@@ -446,24 +471,32 @@ const GestionEquipos = () => {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl max-w-sm text-center"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl max-w-sm text-center relative"
             >
+              {loadingAction && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-2xl">
+                  <Loader2 className="w-10 h-10 animate-spin text-white" />
+                </div>
+              )}
+
               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3">
                 ¿Eliminar mantenimiento?
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Esta acción no se puede deshacer.
               </p>
+
               <div className="flex justify-center gap-3">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                  className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 >
                   Cancelar
                 </button>
+
                 <button
                   onClick={confirmarEliminacion}
-                  className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition"
+                  className="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600"
                 >
                   Eliminar
                 </button>
@@ -472,6 +505,7 @@ const GestionEquipos = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

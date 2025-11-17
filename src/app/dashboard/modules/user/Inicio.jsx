@@ -148,21 +148,48 @@ const Inicio = ({ user }) => {
             </p>
           ) : (
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {recientes.map((servicio, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center py-3"
+              {recientes.map((m) => (
+                <motion.div
+                  key={m.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-all duration-300"
                 >
-                  <div>
-                    <p className="font-medium text-gray-800 dark:text-gray-200">
-                      {servicio.nombreEquipo} ({servicio.marca})
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(servicio.fechaCreacion).toLocaleDateString()} —{" "}
-                      {servicio.estado.replace("_", " ")}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={m.fotoUrl}
+                      alt={m.nombreEquipo}
+                      className="w-16 h-16 object-cover rounded-lg border border-gray-300 dark:border-gray-700"
+                    />
+
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-gray-100">
+                        {m.nombreEquipo}{" "}
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          ({m.marca} {m.modelo})
+                        </span>
+                      </p>
+
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {m.descripcionProblema}
+                      </p>
+
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(m.fechaCreacion).toLocaleDateString("es-CO")}
+                      </p>
+                    </div>
                   </div>
-                </div>
+
+                  <span
+                    className={`text-xs font-medium px-3 py-1 rounded-full ${m.estado === "pendiente"
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                        : m.estado === "en_revision"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                          : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                      }`}
+                  >
+                    {m.estado.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </span>
+                </motion.div>
               ))}
             </div>
           )}

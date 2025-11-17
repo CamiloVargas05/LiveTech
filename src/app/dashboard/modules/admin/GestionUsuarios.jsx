@@ -12,8 +12,10 @@ import {
   Eye,
   EyeOff,
   Search,
+  Loader2,
 } from "lucide-react";
 import { useGestionUsuarios } from "@/app/hooks/admin/useGestionUsuarios";
+import { toast } from "react-toastify";
 
 const GestionUsuarios = () => {
   const { usuarios, isLoading, error, crearUsuario, actualizarUsuario } =
@@ -32,6 +34,7 @@ const GestionUsuarios = () => {
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [userToToggle, setUserToToggle] = useState(null);
+  const [loadingAction, setLoadingAction] = useState(false);
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -49,6 +52,7 @@ const GestionUsuarios = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoadingAction(true);
     try {
       if (editingId) {
         await actualizarUsuario(editingId, {
@@ -57,9 +61,11 @@ const GestionUsuarios = () => {
           phone: formData.phone,
           role: formData.role,
         });
+        toast.success("Usuario actualizado exitosamente");
         setEditingId(null);
       } else {
         await crearUsuario(formData);
+        toast.success("Usuario creado exitosamente");
       }
       setFormData({
         name: "",
@@ -69,7 +75,9 @@ const GestionUsuarios = () => {
         password: "",
       });
       setShowPassword(false);
-    } catch (error) {}
+    } finally {
+      setLoadingAction(false);
+    }
   };
 
   const handleEdit = (usuario) => {
@@ -103,18 +111,32 @@ const GestionUsuarios = () => {
 
   const confirmToggleEstado = async () => {
     if (!userToToggle) return;
+    setLoadingAction(true);
     try {
       await actualizarUsuario(userToToggle.id, {
         isActive: !userToToggle.isActive,
       });
-    } catch (e) {} finally {
+
+      toast.success(
+        userToToggle.isActive
+          ? "Usuario desactivado correctamente"
+          : "Usuario activado correctamente"
+      );
+    } finally {
       setShowModal(false);
       setUserToToggle(null);
+      setLoadingAction(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 p-6 md:p-10 relative">
+      {loadingAction && (
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <Loader2 className="w-12 h-12 animate-spin text-green-600" />
+        </div>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -132,9 +154,10 @@ const GestionUsuarios = () => {
           initial={{ x: -30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 transition-all duration-500 border border-gray-100 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700 transition-all duration-500"
         >
           <form onSubmit={handleSubmit} className="space-y-5">
+            
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Nombre Completo
@@ -142,10 +165,10 @@ const GestionUsuarios = () => {
               <input
                 type="text"
                 name="name"
+                placeholder="Ejemplo: Juan Pérez"
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
-                placeholder="Ejemplo: Juan Perez"
                 required
               />
             </div>
@@ -157,11 +180,11 @@ const GestionUsuarios = () => {
               <input
                 type="email"
                 name="email"
+                placeholder="correo@ejemplo.com"
                 disabled={!!editingId}
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
-                placeholder="correo@ejemplo.com"
                 required
               />
             </div>
@@ -173,10 +196,10 @@ const GestionUsuarios = () => {
               <input
                 type="text"
                 name="phone"
+                placeholder="Ejemplo: 3001234567"
                 value={formData.phone}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
-                placeholder="Ejemplo: 3001234567"
               />
             </div>
 
@@ -207,16 +230,16 @@ const GestionUsuarios = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
+                    placeholder="********"
                     value={formData.password}
                     onChange={handleInputChange}
                     className="w-full px-4 pr-10 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 focus:border-green-500 outline-none transition"
-                    placeholder="********"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -251,7 +274,7 @@ const GestionUsuarios = () => {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold"
                 >
                   <XCircle className="w-5 h-5" />
                   Cancelar
@@ -351,21 +374,24 @@ const GestionUsuarios = () => {
               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
                 {userToToggle?.isActive ? "Desactivar usuario" : "Activar usuario"}
               </h3>
+
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {userToToggle?.isActive
                   ? `¿Seguro que deseas desactivar a ${userToToggle?.name}?`
                   : `¿Seguro que deseas activar a ${userToToggle?.name}?`}
               </p>
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => {
                     setShowModal(false);
                     setUserToToggle(null);
                   }}
-                  className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                  className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 >
                   Cancelar
                 </button>
+
                 <button
                   onClick={confirmToggleEstado}
                   className={`px-4 py-2 rounded-lg text-white font-semibold transition ${
@@ -381,6 +407,7 @@ const GestionUsuarios = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

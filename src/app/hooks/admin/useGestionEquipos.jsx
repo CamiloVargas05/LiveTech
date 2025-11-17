@@ -58,19 +58,17 @@ export const useGestionEquipos = () => {
   const actualizarEquipo = async (id, data) => {
     setIsLoading(true);
     setError(null);
+
     try {
-      // Crear FormData solo si hay foto nueva
       let payload;
       let headers = getAuthHeaders();
 
       if (data.foto) {
         payload = new FormData();
-        Object.entries(data).forEach(([key, value]) => {
-          payload.append(key, value);
-        });
+        payload.append("foto", data.foto);
         headers["Content-Type"] = "multipart/form-data";
       } else {
-        payload = data;
+        payload = {};
       }
 
       await axios.patch(`${API_URL}/api/mantenimiento/${id}`, payload, {
