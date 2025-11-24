@@ -12,7 +12,7 @@ export const useForgotPassword = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/forgot-password`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/forgot-password`,
         { email }
       );
       
@@ -42,7 +42,7 @@ export const useForgotPassword = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/verify-code`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/verify-code`,
         { email, code }
       );
       
@@ -77,7 +77,7 @@ export const useForgotPassword = () => {
       }
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/reset-password`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/reset-password`,
         {
           email: resetData.email,
           code: resetData.code,
