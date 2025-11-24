@@ -22,7 +22,7 @@ export const useLogin = () => {
       const { confirmPassword, ...datosRegistro } = datosUsuario;
 
       // Llamada a endpoint de registro
-      const respuesta = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/register`, datosRegistro);
+      const respuesta = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/users/register`, datosRegistro);
       
       // Ejecutar callback de éxito si está definido
       if (callbacks.onSuccess) {
